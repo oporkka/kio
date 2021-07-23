@@ -146,6 +146,125 @@ paths:
         default:
           $ref: '#/responses/Error'
 
+  #v2 applications API. Not for general consumption.
+  '/v2/apps':
+    get:
+      summary: list applications
+      description: |
+        Lists all registered applications.
+      tags:
+        - Applications
+      operationId: 'org.zalando.stups.kio.api/read-applications'
+      parameters:
+        - name: search
+          in: query
+          description: "Search term for application filtering."
+          type: string
+          required: false
+        - name: modified_before
+          in: query
+          description: "Only include apps that were modified before date"
+          type: string
+          format: date-time
+          required: false
+        - name: modified_after
+          in: query
+          description: "Only include apps that were modified after date"
+          type: string
+          format: date-time
+          required: false
+        - name: team_id
+          in: query
+          description: "Only include apps of this team"
+          type: string
+          required: false
+        - name: incident_contact
+          in: query
+          description: "Only include apps with 24x7 support by the given contact/team"
+          type: string
+          required: false
+        - name: active
+          in: query
+          description: "If true, include only active apps"
+          type: boolean
+          required: false
+      responses:
+        200:
+          description: List of all applications
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Unique identifier of the application
+                  example: kio
+                team_id:
+                  type: string
+                  description: ID of the team, responsible for this application
+                  example: stups
+                incident_contact:
+                  type: string
+                  description: 24x7 contact, e.g. team ID of on-call support team
+                  example: sre
+                active:
+                  type: boolean
+                  description: If this appliation is active, ie gets credentials
+                  example: true
+                criticality_level:
+                  type: integer
+                  description: The criticality level (tier) of the application
+                  example: 2
+                name:
+                  type: string
+                  description: A human-readable name of the application
+                  example: Kio
+                subtitle:
+                  type: string
+                  description: Subtitle of the application
+                  example: Application Registry
+                service_url:
+                  type: string
+                  description: URL of the service
+                  example: https://kio.example.com/
+                scm_url:
+                  type: string
+                  description: URL of SCM repository
+                  example: https://github.com/zalando-stups/kio.git
+                documentation_url:
+                  type: string
+                  description: URL of documentation
+                  example: https://github.com/zalando-stups/kio
+                specification_url:
+                  type: string
+                  description: URL of the specification tool
+                  example: https://github.com/zalando-stups/kio/issues
+                last_modified:
+                  type: string
+                  format: date-time
+                  description: Point in time when the application was created or last modified.
+                  example: '2015-04-25T16:25:00.000Z'
+                matched_rank:
+                  type: number
+                  description: Search result rank for ordering
+                matched_description:
+                  type: string
+                  description: Text fragments of the search result
+                support_url:
+                  type: string
+                  description: URL Where to contact for support
+                repositories_urls:
+                  type: string
+                  description: Comma separated string of repositories URLs
+              required:
+                - id
+                - team_id
+                - name
+        default:
+          $ref: '#/responses/Error'
+
+
   '/apps/{application_id}':
     get:
       summary: read application
@@ -268,6 +387,135 @@ paths:
           description: Application was saved.
         default:
           $ref: '#/responses/Error'
+
+#V2 application (singular) API
+'/apps/{application_id}':
+    get:
+      summary: read application
+      description: |
+        Returns details about one application
+      tags:
+      - Applications
+      operationId: 'org.zalando.stups.kio.api/read-application-v2'
+      parameters:
+      - $ref: '#/parameters/ApplicationID'
+      responses:
+        200:
+          description: Details of one application
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Unique identifier of the application
+                example: kio
+              team_id:
+                type: string
+                description: ID of the team, responsible for this application
+                example: stups
+              incident_contact:
+                type: string
+                description: 24x7 contact, e.g. team ID of on-call support team
+                example: sre
+              active:
+                type: boolean
+                description: If the application is active
+                example: true
+              name:
+                type: string
+                description: A human-readable name of the application
+                example: Kio
+              subtitle:
+                type: string
+                description: An additional title for the application
+                example: Application Registry
+              description:
+                type: string
+                description: Purpose of this application
+                example: Kio manages all application base information.
+              service_url:
+                type: string
+                description: URL of the application
+                example: https://kio.example.com/
+              scm_url:
+                type: string
+                description: URL of SCM repository
+                example: https://github.com/zalando-stups/kio.git
+              documentation_url:
+                type: string
+                description: URL of documentation
+                example: https://github.com/zalando-stups/kio
+              specification_url:
+                type: string
+                description: URL of the specification tool
+                example: https://github.com/zalando-stups/kio/issues
+              required_approvers:
+                type: integer
+                description: Minimum number of approvers needed for a version. Used by fullstop. Deprecated, will be removed in the future.
+                example: 2
+              specification_type:
+                type: string
+                description: Where tickets for the application are managed
+                example: Github
+              criticality_level:
+                type: integer
+                description: The criticality level (tier) of the application
+                example: 2
+              last_modified:
+                type: string
+                format: date-time
+                description: Point in time when the application was created or last modified.
+                example: '2015-04-25T16:25:00.000Z'
+              last_modified_by:
+                type: string
+                description: Who modified the application last
+                example: npiccolotto
+              created:
+                type: string
+                format: date-time
+                description: Point in time when the application was created.
+                example: '2015-04-25T16:25:00.000Z'
+              created_by:
+                type: string
+                description: Who created the application
+                example: npiccolotto
+              publicly_accessible:
+                type: boolean
+                description: |
+                  Marks an app as "publicly available" (on the internet). A public app usually has a landing or login
+                  page and does not expose confidential data to unauthorized users. Examples are: Blogs, Job Portals,
+                  Shops, and so on. Secured (REST)-APIs and micro services are no public endpoints, even if they are
+                  available over the internet.
+                example: true
+              repositories_urls:
+                type: string
+                description: |
+                  A comma separated list of URLs, each pointing to a repository associated with this application
+        404:
+          description: Not found
+        default:
+          $ref: '#/responses/Error'
+
+    put:
+      summary: create or update application
+      description: |
+        Creates or updates an application.
+      tags:
+      - Applications
+      operationId: "org.zalando.stups.kio.api/create-or-update-application!"
+      parameters:
+      - $ref: '#/parameters/ApplicationID'
+      - name: application
+        in: body
+        description: Application details that will be saved.
+        schema:
+          '$ref': '#/definitions/StoreApplicationV2'
+      responses:
+        200:
+          description: Application was saved.
+        default:
+          $ref: '#/responses/Error'
+
 
   # approval types
   '/apps/{application_id}/approvals':
@@ -602,6 +850,88 @@ definitions:
       - team_id
       - active
       - name
+
+  StoreApplicationV2:
+    type: object
+    properties:
+      team_id:
+        type: string
+        description: ID of the team, responsible for this application
+        example: stups
+      incident_contact:
+        type: string
+        description: 24x7 contact, e.g. team ID of on-call support team
+        example: sre
+      active:
+        type: boolean
+        description: if the application is active
+        example: true
+      name:
+        type: string
+        description: A human-readable name
+        example: Kio
+      subtitle:
+        type: string
+        description: An additional title for the application
+        example: STUPS' application registry
+      description:
+        type: string
+        description: Purpose of this application
+        example: Kio manages all application base information.
+      service_url:
+        type: string
+        description: URL of the application
+        example: https://kio.example.com/
+      scm_url:
+        type: string
+        description: URL of SCM repository
+        example: https://github.com/zalando-stups/kio.git
+      documentation_url:
+        type: string
+        description: URL of documentation
+        example: https://github.com/zalando-stups/kio
+      specification_url:
+        type: string
+        description: URL of the specification tool
+        example: https://github.com/zalando-stups/kio/issues
+      support_url:
+        type: string
+        description: URL of filing support requests
+        example: https://github.com/zalando-stups/kio/issues
+      criticality_level:
+        description: Criticality level (tier) of an application
+        type: integer
+        minimum: 1 # Tier-1
+        maximum: 4 # not relevant
+        example: 2
+      required_approvers:
+        type: integer
+        minimum: 1
+        description: DEPRECATED! WILL BE REMOVED IN NEXT RELASE! Minimum number of approvers needed for a version. Used by fullstop.
+        example: 2
+        default: 2
+      specification_type:
+        type: string
+        description: Where tickets for the application are managed
+        example: Github
+      publicly_accessible:
+        type: boolean
+        description: |
+          Marks an app as "publicly available" (on the internet). A public app usually has a landing or login
+          page and does not expose confidential data to unauthorized users. Examples are: Blogs, Job Portals,
+          Shops, and so on. Secured (REST)-APIs and micro services are no public endpoints, even if they are
+          available over the internet.
+        example: true
+      repositories_urls:
+        type: string
+        description: |
+          A comma separated list of URLs each of which points to a repository associated
+          with this application
+    required:
+      - team_id
+      - active
+      - name
+
 
   StoreVersion:
     type: object
