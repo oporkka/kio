@@ -97,8 +97,8 @@
 (def read-application-memo
   (memo/ttl #'read-applications-into-string :ttl/threshold 120000))
 
-(defn read-applications
-  [{:keys [search modified_before modified_after team_id incident_contact active]} request {:keys [db]}]
+(defn- read-applications*
+  [sql-command {:keys [search modified_before modified_after team_id incident_contact active]} request {:keys [db]}]
   (u/require-realms #{"employees" "services"} request)
   (let [conn   {:connection db}
         params {:searchquery      search
@@ -121,6 +121,10 @@
             (response)
             (content-type-json))))))
 
+(defn read-applications
+  [query-params request app-state]
+  (read-applications* sql/cmd-read-applications query-params request app-state))
+
 (defn load-application
   "Loads a single application by ID, used for team checks."
   [application_id db]
@@ -137,13 +141,16 @@
   [applications]
   (map enrich-application applications))
 
-(defn read-application [{:keys [application_id]} request {:keys [db]}]
+(defn read-application* [sql-command application_id request {:keys [db]}]
   (u/require-realms #{"employees" "services"} request)
   (log/debug "Read application %s." application_id)
-  (-> (sql/cmd-read-application {:id application_id} {:connection db})
+  (-> (sql-command {:id application_id} {:connection db})
       (enrich-applications)
       (single-response)
       (content-type-json)))
+
+(defn read-application [{:keys [application_id]} request {:keys [db]}]
+  (read-application* sql/cmd-read-application application_id request {:db db}))
 
 (defn team-exists? [request team]
   (when-not (str/blank? team)
@@ -271,3 +278,11 @@
       (u/require-internal-team (:team_id application) request)
       (response nil))
     (api/error 404 "application not found")))
+
+;; v2 API
+(defn read-applications-v2 [params request app-state]
+ (read-applications* sql/cmd-read-applications-v2 params request app-state))
+
+
+(defn read-application-v2 [{:keys [application_id]} request {:keys [db]}]
+  (read-application* sql/cmd-read-application-v2 {:id application_id} {:connection db}))
