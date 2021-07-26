@@ -154,7 +154,7 @@ paths:
         Lists all registered applications.
       tags:
         - Applications
-      operationId: 'org.zalando.stups.kio.api/read-applications'
+      operationId: 'org.zalando.stups.kio.api/read-applications-v2'
       parameters:
         - name: search
           in: query
@@ -388,8 +388,8 @@ paths:
         default:
           $ref: '#/responses/Error'
 
-#V2 application (singular) API
-'/apps/{application_id}':
+  #V2 application (singular) API
+  '/v2/apps/{application_id}':
     get:
       summary: read application
       description: |
@@ -542,7 +542,6 @@ paths:
           $ref: '#/responses/Error'
 
   # versions
-
   '/apps/{application_id}/versions':
     get:
       summary: list versions
